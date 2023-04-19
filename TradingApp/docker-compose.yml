@@ -1,0 +1,61 @@
+version: '3.3'
+
+networks:
+  localdev:
+    name: localdev
+
+services:
+  api:
+    image: api
+    environment:
+      ASPNETCORE_ENVIRONMENT: 'Production'
+    build:
+      context: TradingDDD
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "7000:80"
+    expose:
+      - "7000"
+    networks:
+      - localdev
+    volumes:
+      - ./logs:/home/logs
+    depends_on:
+      - 'db'
+  client:
+    image: client
+    build:
+      context: TradingClient
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "7001:80"
+    expose:
+      - "7001"
+    networks:
+      - localdev
+    depends_on:
+      - 'api'       
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '3306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    networks:
+      - localdev
+    volumes:
+      - my-db:/var/lib/mysql
+# Names our volume
+volumes:
+  my-db:
+  logs:
